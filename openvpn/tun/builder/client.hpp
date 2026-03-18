@@ -129,7 +129,9 @@ class Client : public TunClient
                 tun_persist = config->tun_persist; // long-term persistent
             else
                 tun_persist.reset(new TunPersist(false,
-                                                 config->retain_sd ? TunWrapObjRetain::RETAIN : TunWrapObjRetain::NO_RETAIN,
+                                                 // Keep TunPersist from closing the fd directly. On Android, the
+                                                 // stream_descriptor owns the fd via unique_fd and performs close.
+                                                 TunWrapObjRetain::RETAIN,
                                                  config->builder)); // short-term
 
             try
@@ -185,7 +187,7 @@ class Client : public TunClient
 
                 impl.reset(new TunImpl(io_context,
                                        sd,
-                                       true,
+                                       false,
                                        config->tun_prefix,
                                        this,
                                        config->frame,
